@@ -1,0 +1,15 @@
+{
+    "summary": "This code implements a Tree of Thoughts with LMQL, applying natural selection for reasoning and featuring asynchronous validation. Planned updates include multiple arguments and dynamic width determination. Examples can be found in the examples folder.",
+    "details": [
+        {
+            "comment": "The code is for a Tree of Thoughts implementation using LMQL. It applies a natural selection process to steer reasoning, and features asynchronous, configurable, prompt-based, and programmatic result validation. Planned features include multiple arguments, argument types, feature weighting, and dynamic width determination.",
+            "location": "\"/media/root/Prima/works/lmql-tree-of-thoughts/docs/src/README.md\":0-21",
+            "content": "# Tree of thoughts\nA LMQL implementation of something like tree of thoughts. Applies a natural selection process to steer reasoning and constrain the results.\nMany many improvements to be made.\n## Features\nI meant this to be as \"engineerable\" as possible. Each tree instance is configured to solve a specific problem, and be used as a function. It can apply a callback function to the result so it doesn't necessarily have to return text.\nSome of the main features:\n- Asynchronous\n- Configurable\n- Prompt-based and programmatic result validation\nSome planned features:\n- Multiple arguments and argument types\n- Feature weighting: option to assign relative importance to selection criteria\n- Dynamic width: method for determining how many branches should stem from each thought\n## How it works\nEach iteration consists of a review phase, a generation phase, an evaluation phase.\n- **Selection:** The top-k scoring lines of thought are selected\n- **Review:** Selected lines of thought are checked to see if they contain an answer."
+        },
+        {
+            "comment": "The code generates a fixed number of branching thoughts from selected leaf thoughts, and scores new thoughts against defined criteria. Conclusions are generated if an answer is present and validated before being returned. The usage can be found in the examples folder with three configurations for initial prompt, reasoning dynamics, and answer handling.",
+            "location": "\"/media/root/Prima/works/lmql-tree-of-thoughts/docs/src/README.md\":22-26",
+            "content": "- **Generation:**  A fixed number of branching thoughts are generate from selected leaf thoughts. If a selected leaf contains an answer, a conclusion is generated instead.\n- **Evaluation:** New thoughts are scored against defined criteria to determine the relative strength of the threads. If any conclusions were generated, they are validated and returned if they pass. \n## Usage\nFor now see the `examples` folder to get a sense of it. In a nutshell there's three configurations: one for the initial prompt, one that governs the reasoning dynamics (evaluation, answer recognition), and one that describes how answer attempts are handled (conclusion generation, callbacks, validation)."
+        }
+    ]
+}

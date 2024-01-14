@@ -1,0 +1,284 @@
+{
+    "0": {
+        "file_id": 0,
+        "content": "/README.md",
+        "type": "filepath"
+    },
+    "1": {
+        "file_id": 0,
+        "content": "This code implements a Tree of Thoughts with LMQL, applying natural selection for reasoning and featuring asynchronous validation. Planned updates include multiple arguments and dynamic width determination. Examples can be found in the examples folder.",
+        "type": "summary"
+    },
+    "2": {
+        "file_id": 0,
+        "content": "# Tree of thoughts\nA LMQL implementation of something like tree of thoughts. Applies a natural selection process to steer reasoning and constrain the results.\nMany many improvements to be made.\n## Features\nI meant this to be as \"engineerable\" as possible. Each tree instance is configured to solve a specific problem, and be used as a function. It can apply a callback function to the result so it doesn't necessarily have to return text.\nSome of the main features:\n- Asynchronous\n- Configurable\n- Prompt-based and programmatic result validation\nSome planned features:\n- Multiple arguments and argument types\n- Feature weighting: option to assign relative importance to selection criteria\n- Dynamic width: method for determining how many branches should stem from each thought\n## How it works\nEach iteration consists of a review phase, a generation phase, an evaluation phase.\n- **Selection:** The top-k scoring lines of thought are selected\n- **Review:** Selected lines of thought are checked to see if they contain an answer.",
+        "type": "code",
+        "location": "/README.md:1-22"
+    },
+    "3": {
+        "file_id": 0,
+        "content": "The code is for a Tree of Thoughts implementation using LMQL. It applies a natural selection process to steer reasoning, and features asynchronous, configurable, prompt-based, and programmatic result validation. Planned features include multiple arguments, argument types, feature weighting, and dynamic width determination.",
+        "type": "comment"
+    },
+    "4": {
+        "file_id": 0,
+        "content": "- **Generation:**  A fixed number of branching thoughts are generate from selected leaf thoughts. If a selected leaf contains an answer, a conclusion is generated instead.\n- **Evaluation:** New thoughts are scored against defined criteria to determine the relative strength of the threads. If any conclusions were generated, they are validated and returned if they pass. \n## Usage\nFor now see the `examples` folder to get a sense of it. In a nutshell there's three configurations: one for the initial prompt, one that governs the reasoning dynamics (evaluation, answer recognition), and one that describes how answer attempts are handled (conclusion generation, callbacks, validation).",
+        "type": "code",
+        "location": "/README.md:23-27"
+    },
+    "5": {
+        "file_id": 0,
+        "content": "The code generates a fixed number of branching thoughts from selected leaf thoughts, and scores new thoughts against defined criteria. Conclusions are generated if an answer is present and validated before being returned. The usage can be found in the examples folder with three configurations for initial prompt, reasoning dynamics, and answer handling.",
+        "type": "comment"
+    },
+    "6": {
+        "file_id": 1,
+        "content": "/examples/get_24.py",
+        "type": "filepath"
+    },
+    "7": {
+        "file_id": 1,
+        "content": "This code initializes a TreeOfThoughts object with specific configuration and uses it to reason about the number 24, generating potential answers and allowing new thoughts to branch off them.",
+        "type": "summary"
+    },
+    "8": {
+        "file_id": 1,
+        "content": "from tree_of_thoughts import TreeOfThoughts\ntree_config = {\n    \"initial\": { # sandwiches the argument passed to self.reason\n        \"prefix\": \"Question: use 4 numbers and basic arithmetic operations (+-*/) to obtain \",\n        \"suffix\": \". Only choose one number each step.\\nAnswer: Let's think step by step.\",\n    },\n    \"reasoning\": {\n        \"graded\": {\n            \"prefix\": \"Please assess the following reasoning, and choose an option for each point:\\n```\\n\",\n            \"suffix\": \"\\n```\\n\\n\",\n            \"items\": [\n                \"The reasoning is reliable and repeatable: \",\n                \"We are getting closer to the answer: \"\n                \"It's impossible that there is a mistake: \",\n                \"The reasoning is clear and easy to follow: \",\n            ],\n        },\n        # both vital and fatal are applied to the reasoning after each new thought is generated\n        \"vital\": {\n            \"prefix\": \"Please assess the following reasoning, and choose an option for each point:\\n```\\n\",\n            \"suffix\": \"\\n```\\n\",",
+        "type": "code",
+        "location": "/examples/get_24.py:1-22"
+    },
+    "9": {
+        "file_id": 1,
+        "content": "This code imports the TreeOfThoughts class from \"tree_of_thoughts\" and sets up a config dictionary for tree thinking. The initial section provides prefix and suffix for starting questions, while the reasoning section includes options to evaluate the reasoning given. The vital and fatal sections assess the reasoning after each new thought.",
+        "type": "comment"
+    },
+    "10": {
+        "file_id": 1,
+        "content": "            \"items\": [ # if any of these questions are answered \"no\" the new leaf dies\n                \"There is not a single math mistake in the reasoning: \",\n            ]\n        },\n        \"fatal\": { # if any of these questions are answered \"yes\" the new leaf dies\n            \"prefix\": \"Please assess the following reasoning, and choose an option for each point.\\n```\\n\",\n            \"suffix\": \"\\n```\\n\",\n            \"items\": [\n                \"There is a math mistake in the reasoning: \",\n            ]\n        },\n        \"stopping\": { # Applied at the start of each iteration to flag potential answers\n            \"prefix\": \"Has the following reasoning achieved a correct and satisfying answer to the initial question?\\n```\\n\",\n            \"suffix\": \"\\n```\\n\\nAnswer: \",\n        },\n    },\n    \"answer\": {\n        \"callback_prompt\": { # Applied to the reasoning leading up to an answer\n            \"suffix\": \"In conclusion, using (+,-,x,/) and obey PEDMAS, in one expression it is written as: \",\n        },\n       ",
+        "type": "code",
+        "location": "/examples/get_24.py:23-43"
+    },
+    "11": {
+        "file_id": 1,
+        "content": "This code defines a dictionary containing different prompts for user input. The \"items\" key has questions that, if answered \"no\", result in the new leaf's death. The \"fatal\" key asks to assess reasoning and choose options for each point. The \"stopping\" key flags potential answers at the start of each iteration. Lastly, the \"answer\" key provides a callback prompt applied to reasoning leading up to an answer.",
+        "type": "comment"
+    },
+    "12": {
+        "file_id": 1,
+        "content": " \"callback_fn\": lambda x: x.replace(\".\", \"\").strip(), # Applied to the result of whatever follows from the callback prompt\n        \"validation\" : { # validations can be a yes no question and expected answer, or any bool returning function\n            \"prefix\": \"Please answer the following questions about the expression `\",\n            \"suffix\": \"`. \",\n            \"items\": [ # TODO: allow argument usage in all prompts and not just validation\n                (\"Are four numbers used to obtain $arg?\", True), # $arg substitutes the reasoning argument into the validation prompt\n                (\"Does the expression really equal $arg?\",  True)\n            ]\n        },\n    },\n}\nnumber_maker = TreeOfThoughts(**tree_config)\n# The top n_active_leafs scoring leafs are selected on each iteration\n# n_branches new thoughts breanch from them if they are not answers\nanswers = number_maker.reason(\"24\", n_active_leaves=2, n_branches=3, verbose=True)\nprint()\nprint(\"FINAL ANSWERS\")\nprint(answers)",
+        "type": "code",
+        "location": "/examples/get_24.py:43-63"
+    },
+    "13": {
+        "file_id": 1,
+        "content": "The code is initializing a TreeOfThoughts object with specific configuration, then using it to reason about the number 24. It will generate n_active_leaves=2 possible answers and allow n_branches=3 new thoughts to branch from them if they are not answers. The final answers will be printed.",
+        "type": "comment"
+    },
+    "14": {
+        "file_id": 2,
+        "content": "/examples/mayonnaise.py",
+        "type": "filepath"
+    },
+    "15": {
+        "file_id": 2,
+        "content": "This code sets up a TreeOfThoughts instance to iterate through the word \"mayonnaise\" letter by letter, count occurrences of 'n', and store the result in answers for final printing.",
+        "type": "summary"
+    },
+    "16": {
+        "file_id": 2,
+        "content": "from tree_of_thoughts import TreeOfThoughts\ntree_config = {\n    \"initial\": {\n        \"prefix\": \"Iterate through the word '\",\n        \"suffix\": \"' letter by letter, and note the index of each letter.\",\n    },\n    \"reasoning\": {\n        \"graded\": {\n            \"items\": [\n                \"On a scale of 1-9 the instructions are being respected so far: \"\n            ],\n        },\n    },\n    \"answer\": {\n        \"callback_prompt\": {\n            \"suffix\": \"\\nThe total number of of 'n' occurences is: \",\n        },\n        \"callback_fn\": lambda x: x.replace(\".\", \"\").strip(),\n        \"validation\" : {\n            \"items\": [\n                  lambda s: s.isdigit()\n            ]\n        },\n    },\n}\nletter_n_counter = TreeOfThoughts(**tree_config, max_iterations=15)\nanswers = letter_n_counter.reason(\"mayonnaise\", n_active_leaves=1, n_branches=1, verbose=True)\nprint()\nprint(\"FINAL ANSWERS\")\nprint(answers)",
+        "type": "code",
+        "location": "/examples/mayonnaise.py:1-34"
+    },
+    "17": {
+        "file_id": 2,
+        "content": "This code sets up a TreeOfThoughts instance to iterate through the word \"mayonnaise\" letter by letter, count occurrences of 'n', and store the result in answers for final printing.",
+        "type": "comment"
+    },
+    "18": {
+        "file_id": 3,
+        "content": "/tree_of_thoughts.py",
+        "type": "filepath"
+    },
+    "19": {
+        "file_id": 3,
+        "content": "This code constructs a tree-based QA system with classes for binary trees, marking answers, and selecting top n leaf nodes using depth-first traversal. The TreeOfThoughts class processes prompts, reasons with arguments, sorts by rating, validates answers, and has debugging features.",
+        "type": "summary"
+    },
+    "20": {
+        "file_id": 3,
+        "content": "import lmql\nimport asyncio\nfrom collections import namedtuple\ncolor= {\n    \"black\": lambda text: f\"\\033[30m{text}\\033[0m\",\n    \"red\": lambda text: f\"\\033[31m{text}\\033[0m\",\n    \"green\": lambda text: f\"\\033[32m{text}\\033[0m\",\n    \"yellow\": lambda text: f\"\\033[33m{text}\\033[0m\",\n    \"blue\": lambda text: f\"\\033[34m{text}\\033[0m\",\n    \"magenta\": lambda text: f\"\\033[35m{text}\\033[0m\",\n    \"cyan\": lambda text: f\"\\033[36m{text}\\033[0m\",\n    \"white\": lambda text: f\"\\033[37m{text}\\033[0m\",\n}\n# TODO: debug output writer\nPromptSandwich = namedtuple(\"PromptSandwich\", [\"prefix\", \"suffix\", \"items\"])\nReasoningPrompt = namedtuple(\"ReasoningPrompt\", [\"graded\", \"vital\", \"fatal\", \"stopping\"])\nAnswerPrompt = namedtuple(\"AnswerPrompt\", [\"callback_prompt\", \"callback_fn\", \"validation\"])\ndef create_prompt_sandwich(data):\n    prefix = data.get(\"prefix\", \"\")\n    suffix = data.get(\"suffix\", \"\")\n    items = data.get(\"items\", [])\n    return PromptSandwich(prefix=prefix, suffix=suffix, items=items)\ndef create_prompt_reasoning(data):\n    graded = create_prompt_sandwich(data.get(\"graded\", {}))",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:1-29"
+    },
+    "21": {
+        "file_id": 3,
+        "content": "Code imports lmql, asyncio, and namedtuple; defines color dictionary for formatting text; creates PromptSandwich and ReasoningPrompt namedtuples; defines create_prompt_sandwich function to create PromptSandwich instances; defines create_prompt_reasoning function to create ReasoningPrompt instances, using create_prompt_sandwich for \"graded\" parameter.",
+        "type": "comment"
+    },
+    "22": {
+        "file_id": 3,
+        "content": "    vital = create_prompt_sandwich(data.get(\"vital\", {}))\n    fatal = create_prompt_sandwich(data.get(\"fatal\", {}))\n    stopping = create_prompt_sandwich(data.get(\"stopping\", {}))\n    return ReasoningPrompt(graded=graded, vital=vital, fatal=fatal, stopping=stopping)\ndef create_prompt_answer(data):\n    callback_prompt = create_prompt_sandwich(data.get(\"callback_prompt\", {}))\n    callback_fn = data.get(\"callback_fn\", None)\n    validation = create_prompt_sandwich(data.get(\"validation\", {}))\n    return AnswerPrompt(callback_prompt=callback_prompt, callback_fn=callback_fn, validation=validation)\nclass Node:\n    def __init__(self, id: int, value: int | float, parent_id: int | None):\n        self.id = id\n        self.value = value\n        self.parent_id = parent_id\nclass Tree:\n    def __init__(self):\n        self.nodes = {}\n        self.stack = {}\n        self.answers = []\n        self.id_counter = 0\n    def push(self, value: str, score: int | float, parent: Node):\n        # nodes have unique names, still determined by counter",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:30-55"
+    },
+    "23": {
+        "file_id": 3,
+        "content": "The code creates a class called \"Node\" and a class called \"Tree\". The Node class represents each node in the tree with an ID, value, and parent ID. The Tree class initializes empty dictionaries for nodes and stacks, an empty list for answers, and an ID counter. The push function is used to add nodes to the tree.",
+        "type": "comment"
+    },
+    "24": {
+        "file_id": 3,
+        "content": "        # viable_leaf_ids is instead \"data\" and has keys for each of the nodes\n        self.id_counter += 1\n        if parent.id not in self.nodes:\n            raise ValueError(f\"Parent node {parent.value} ({parent.id}) not in tree\")\n        self.nodes[self.id_counter] = Node(self.id_counter, value, parent.id)\n        self.stack[self.id_counter] = score\n    def add_root(self, value: str) -> Node:\n        self.id_counter += 1\n        root_node = Node(self.id_counter, value, None)\n        self.nodes[self.id_counter] = root_node\n        return root_node\n    def mark_as_answer(self, id: int, root_id: int):\n        self.answers.append((id, root_id))\n    def leaves_pop_top(self, n: int) -> list[int]:\n        # selected_leaf_ids = sorted(self.viable_leaf_ids, key=self.viable_leaf_ids.get, reverse=True)[:n]\n        # selected_leaf_ids = sorted(self.viable_leaf_ids, reverse=True)[:n]\n        selected_leaf_ids = []\n        i = self.id_counter\n        while len(selected_leaf_ids) < n and i > 0:\n            if i in self.stack:",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:56-82"
+    },
+    "25": {
+        "file_id": 3,
+        "content": "The code defines classes and functions for constructing a binary tree, adding nodes, marking answers, and selecting the top n leaf nodes. The \"Node\" class represents individual nodes in the tree, with an id, value, and parent id. The \"Tree\" class maintains a dictionary of node ids as keys and stores their associated Node objects. Functions include adding a root node, marking answers by specifying an id and its corresponding root id, and selecting the top n leaf nodes based on some criteria.",
+        "type": "comment"
+    },
+    "26": {
+        "file_id": 3,
+        "content": "                selected_leaf_ids.append(i)\n            i -= 1\n        for leaf_id in selected_leaf_ids:\n            if self.nodes[leaf_id].parent_id:\n                del self.stack[leaf_id]\n        return selected_leaf_ids\n    def get_path(self, id: int) -> tuple[Node, str, dict]:\n        if id not in self.nodes:\n            raise ValueError(f\"Node {id} not in tree\")\n        node_values = []\n        leaf_node = self.nodes[id]\n        current_node = self.nodes[id]\n        while current_node is not None:\n            node_values.append(current_node.value)\n            if current_node.parent_id is not None:\n                current_node = self.nodes[current_node.parent_id]\n            else:\n                current_node = None\n        reasoning_path = node_values[1:]\n        reasoning_path = \"\\n\".join(reversed(reasoning_path))\n        return leaf_node, reasoning_path, {}\n    def paths_pop_top(self, n) -> list[tuple[Node, str, dict]]:\n        selected_leaf_ids = self.leaves_pop_top(n)\n        return [self.get_path(id) for id in selected_leaf_ids]",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:83-114"
+    },
+    "27": {
+        "file_id": 3,
+        "content": "Code from lmql-tree-of-thoughts/tree_of_thoughts.py:82-113\n- `selected_leaf_ids` keeps track of selected leaf IDs during traversal, starting from the root node.\n- It iterates over the tree nodes in a depth-first manner, appending each leaf's ID to `selected_leaf_ids`.\n- After all leaf nodes have been processed, it removes non-leaf nodes from the stack.\n- Returns a list of selected leaf IDs after traversal.",
+        "type": "comment"
+    },
+    "28": {
+        "file_id": 3,
+        "content": "class TreeOfThoughts:\n    initial: PromptSandwich\n    reasoning: ReasoningPrompt\n    answer: AnswerPrompt\n    def __init__(self, initial, reasoning, answer, max_iterations=10):\n        self.initial = create_prompt_sandwich(initial)\n        self.reasoning = create_prompt_reasoning(reasoning)\n        self.answer = create_prompt_answer(answer)\n        self.max_iterations = max_iterations\n        self.penalties = [] # TODO: investigate if these are useful, would add into evaluations\n        self.bonuses = []\n        # self.params = {criteria: (1, 0) for criteria in self.graded_criteria} # TODO: use these in self.process_rating\n        self.tree = Tree()\n        # TODO: memory, error propagation\n        self.verbose_buffer = \"\"\n    def reason(self, argument, n_active_leaves, n_branches, verbose=False):\n        return asyncio.run(self.async_reason(argument, n_active_leaves, n_branches, verbose))\n    def print_verbose(self):\n        # clear screen\n        print(\"\\033c\", end=\"\")\n        print(self.verbose_buffer)\n    async def async_reason(self, argument, n_active_leaves, n_branches, verbose=False):",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:116-148"
+    },
+    "29": {
+        "file_id": 3,
+        "content": "The code defines a TreeOfThoughts class that takes initial, reasoning, and answer prompts as parameters. It initializes instance variables such as max_iterations, penalties, bonuses, tree, and verbose_buffer. The reason method is used to reason with the given argument, n_active_leaves, and n_branches, while the async_reason method is an asynchronous version of the reason method. The print_verbose method clears the screen and prints the verbose_buffer.",
+        "type": "comment"
+    },
+    "30": {
+        "file_id": 3,
+        "content": "        self.verbose_buffer = \"\"\n        self.argument = argument\n        root_value = self.initial.prefix + argument + self.initial.suffix\n        root = self.tree.add_root(root_value)\n        if verbose:\n            self.verbose_buffer += color['cyan']( \"ROOT ------------------------------------------------------\\n\")\n            self.verbose_buffer += root_value + \"\\n\\n\"\n            self.print_verbose()\n        current = 1\n        while current <= self.max_iterations:\n            if verbose:\n                self.verbose_buffer += color['green'](f\"ITERATION {current}\\n\")\n                self.verbose_buffer += color['cyan']( \"CHECKING FOR ANSWERABLE THOUGHTS --------------------------\\n\")\n                self.print_verbose()\n            # get (node, path_string) pairs, and default to the root if all leaves die\n            selected_leaves = self.tree.paths_pop_top(n_active_leaves)\n            if selected_leaves:\n                can_answer = await asyncio.gather(*[self.is_finished(path + \"\\n\" + thought.value) for thought, path, attrs in selected_leaves])",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:149-173"
+    },
+    "31": {
+        "file_id": 3,
+        "content": "Initializing root node, verbose buffer, and setting up iteration loop for leaf nodes. Collects active thought leaves by iterating until max_iterations. Verbose mode displays current iteration and checking for answerable thoughts.",
+        "type": "comment"
+    },
+    "32": {
+        "file_id": 3,
+        "content": "                can_answer = [x[0] for x in can_answer]\n                for i, is_answerable in enumerate(can_answer):\n                    selected_leaves[i][2][\"preceeds_answer\"] = is_answerable\n            else:\n                selected_leaves = [(root, \"\", {\"preceeds_answer\": False})]\n            if verbose:\n                tally = sum(1 for _, _, meta in selected_leaves if meta.get('preceeds_answer', False))\n                self.verbose_buffer += f\"  {tally} selected leaves are potential answers\\n\\n\"\n                self.verbose_buffer += color['cyan']( \"GENERATING NEXT THOUGHTS ----------------------------------\\n\")\n                self.print_verbose()\n            if verbose:\n                self.verbose_buffer += color['cyan'](\"\\n------------------------------\\n\").join([reasoning_path + \"\\n\" + color['blue'](leaf_node.value) + \"\\n\" for leaf_node, reasoning_path, attrs in selected_leaves]) + \"\\n\"\n                self.print_verbose()\n            next_thoughts_list = []\n            for leaf_thought, reasoning_path, attrs in selected_leaves:",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:174-191"
+    },
+    "33": {
+        "file_id": 3,
+        "content": "The code checks if any leaf thoughts from a list can potentially answer a question. If there are potential answers, it assigns the \"preceeds_answer\" attribute to True for those leaves. It then tallies the number of selected leaves that could be potential answers and prints verbose information if verbose mode is enabled. Lastly, it creates a new list called \"next_thoughts_list\" to store the next thoughts that will be generated.",
+        "type": "comment"
+    },
+    "34": {
+        "file_id": 3,
+        "content": "                if attrs[\"preceeds_answer\"]:\n                    next_thoughts_list.append(self.final_result(reasoning_path + \"\\n\" + leaf_thought.value))\n                else:\n                    next_thoughts_list.append(self.get_next_thoughts(n_branches, reasoning_path + \"\\n\" + leaf_thought.value))\n            next_thoughts_list = await asyncio.gather(*next_thoughts_list)\n            next_thoughts_list = [x if isinstance(x[0], str) else [y[0] for y in x] for x in next_thoughts_list]\n            if verbose:\n                tally = sum(len(x) for x in next_thoughts_list)\n                self.verbose_buffer += f\"  {tally} new thoughts from here\\n\\n\" \n                self.verbose_buffer += color['cyan']( \"ASSESSING THOUGHT PATHS -----------------------------------\\n\")\n                self.print_verbose()\n            thought_scores_list = []\n            for leaf_thought, next_thoughts in zip(selected_leaves, next_thoughts_list):\n                leaf, reasoning_path, attrs = leaf_thought\n                if attrs[\"preceeds_answer\"]:",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:192-209"
+    },
+    "35": {
+        "file_id": 3,
+        "content": "This code is checking if a thought preceeds the answer, and based on that, it appends either the final result or the next thoughts to the list. It then gathers the results using asyncio, flattens the list and performs some verbose logging if needed. Finally, it initializes an empty list for thought scores and starts a loop over selected leaves and next thoughts lists. If the current thought precedes the answer, it assigns values to the variables leaf, reasoning_path, and attrs.",
+        "type": "comment"
+    },
+    "36": {
+        "file_id": 3,
+        "content": "                    thought_scores_list.append(*[self.validate_result(next_thoughts[0])]) # attempted answers only have one branch\n                else:\n                    thought_scores_list.append(asyncio.gather(*[self.evaluate_reasoning(reasoning_path + \"\\n\" + leaf.value + \"\\n\" + next_thought) for next_thought in next_thoughts]))\n            thought_scores_list = await asyncio.gather(*thought_scores_list)\n            thought_scores_list = [x if isinstance(x, list) else [x] for x in thought_scores_list]\n            if verbose:\n                n_thoughts = sum(len(x) for x in thought_scores_list)\n                n_true = sum([1 for x in thought_scores_list for num in x if num > 0])\n                self.verbose_buffer += f\"  {n_true}/{n_thoughts} of the new thoughts are viable\\n\"\n                self.print_verbose()\n            answers = []\n            for leaf_thought, next_thoughts, next_thought_ratings in zip(selected_leaves, next_thoughts_list, thought_scores_list):\n                leaf, reasoning_path, attrs = leaf_thought",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:210-225"
+    },
+    "37": {
+        "file_id": 3,
+        "content": "Appends attempted answers to thought scores list, else gathers results using asyncio. Then gathers all results into a list, counts viable thoughts, and stores them in corresponding lists. Finally, iterates over selected leaves, reasoning paths, and thought scores for further processing.",
+        "type": "comment"
+    },
+    "38": {
+        "file_id": 3,
+        "content": "                for next_thought, rating in sorted(zip(next_thoughts, next_thought_ratings), key=lambda x: x[1], reverse=True):\n                    if rating > 0:\n                        self.tree.push(next_thought, score=rating, parent=leaf)\n            # for leaf_thought, next_thought_ratings in zip(selected_leaves, thought_scores_list):\n                if leaf_thought[2][\"preceeds_answer\"] and next_thought_ratings[0] > 0:\n                    answers.append(next_thoughts[0])\n                    self.tree.mark_as_answer(leaf.id, root.id)\n            if verbose:\n                self.verbose_buffer += f\"  {len(answers)} answers passing validation\\n\\n\"\n                self.print_verbose()\n            current += 1\n            if answers:\n                return answers\n        if verbose:\n            self.verbose_buffer += color['cyan']( \"NO ANSWERS FOUND IN MAX STEPS -----------------------------\\n\\n\")\n            self.print_verbose()\n        return []\n    @lmql.query\n    async def final_result(self, reasoning):",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:226-251"
+    },
+    "39": {
+        "file_id": 3,
+        "content": "This code is part of a tree-based question answering system. It iterates over selected leaves and their corresponding thoughts, sorts them by rating in descending order, and adds high-rated thoughts as potential answers to the current leaf. If an answer is found, it marks the leaf as having an answer connected to the root thought. If no answers are found within the specified number of steps, it returns an empty result. The code also includes verbose printing functionality for debugging purposes.",
+        "type": "comment"
+    },
+    "40": {
+        "file_id": 3,
+        "content": "        '''lmql\n        sample()\n            \"{self.answer.callback_prompt.prefix}\"\n            \"{reasoning}\"\n            \"{self.answer.callback_prompt.suffix}\"\n            \"[result]\"\n            if self.answer.callback_fn:\n                return self.answer.callback_fn(result)\n            return result\n        from\n            \"openai/gpt-3.5-turbo\"\n        '''\n    async def validate_result(self, result):\n        if self.answer.validation.items:\n            loop = asyncio.get_event_loop()\n            answer_validations = []\n            for validation in self.answer.validation.items:\n                if isinstance(validation, tuple):\n                    answer_validations.append(self.prompt_validate(result, validation[0], validation[1]))\n                else:\n                    answer_validations.append(loop.run_in_executor(None, validation, result))\n                    # answer_validations.append(validation(result))\n            answer_validations = await asyncio.gather(*answer_validations)\n            answer_validations = [x[0] if isinstance(x, list) else x for x in answer_validations]",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:252-277"
+    },
+    "41": {
+        "file_id": 3,
+        "content": "The code defines a function 'validate_result' that takes a result and validates it against a list of validation items. It utilizes asyncio for asynchronous execution, and the function processes each validation item either by calling 'prompt_validate' or by running it in an executor thread. The results are then gathered and filtered to obtain the final validation answers.",
+        "type": "comment"
+    },
+    "42": {
+        "file_id": 3,
+        "content": "            if not all(answer_validations):\n                return 0 # below survival threshold\n        return 1 # above survival threshold\n    @lmql.query\n    async def prompt_validate(self, result, validation, should_be):\n        \"\"\"lmql\n        argmax\n            \"( yes/no )\\n\"\n            \"{self.answer.validation.prefix}\"\n            \"{result}\"\n            \"{self.answer.validation.suffix}\"\n            parsed_validation = validation.replace('$arg', self.argument)\n            \"{parsed_validation}\"\n            \"[yn]\"\n            if yn.split()[-1]  in [\"yes\", \"Yes\"]:\n                answer = True\n            else:\n                answer = False\n            return answer == should_be\n        from\n            \"openai/gpt-3.5-turbo\"\n        where\n            STOPS_AT(yn, \"yes\") and\n            STOPS_AT(yn, \"no\") and\n            STOPS_AT(yn, \"Yes\") and\n            STOPS_AT(yn, \"No\") and\n            len(TOKENS(yn)) < 20\n        \"\"\"\n    async def get_next_thoughts(self, n, reasoning):\n        thoughts = [self.get_next_thought(reasoning) for _ in range(n)]",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:279-312"
+    },
+    "43": {
+        "file_id": 3,
+        "content": "Code is defining a function that validates the answer to a question using LMQL, an open-source language for querying large language models. It returns 0 if the answer doesn't meet the validation criteria and 1 otherwise. The prompt for validation is generated by replacing placeholders in the string with actual values. The code also defines another function that retrieves a list of thoughts based on the number of thoughts needed and the given reasoning.",
+        "type": "comment"
+    },
+    "44": {
+        "file_id": 3,
+        "content": "        return await asyncio.gather(*thoughts)\n    # TODO: add continuation prompt (e.g. This next step is very important, so I am paying very close attention...)\n    @lmql.query\n    async def get_next_thought(self, reasoning):\n        '''lmql\n        sample()\n            \"{reasoning}\\n\"\n            \"[thought]\"\n            return thought\n        from \n            \"openai/gpt-3.5-turbo\"\n        where \n            STOPS_BEFORE(thought, \"\\\\n\") and \n            STOPS_BEFORE(thought, \"\\n\")\n        '''\n    @lmql.query\n    async def is_finished(self, reasoning):\n        '''lmql\n        argmax\n            \"(yes/no)\\n\"\n            \"{self.reasoning.stopping.prefix}\"\n            \"{reasoning}\"\n            \"{self.reasoning.stopping.suffix}\"\n            \"[yn]\"\n            if yn.split()[-1] in [\"yes\", \"Yes\"]:\n                return True\n            return False\n        from \n            \"openai/gpt-3.5-turbo\"\n        where\n            STOPS_AT(yn, \"yes\") and\n            STOPS_AT(yn, \"no\") and\n            STOPS_AT(yn, \"Yes\") and\n            STOPS_AT(yn, \"No\") and",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:313-348"
+    },
+    "45": {
+        "file_id": 3,
+        "content": "The code defines two LMQL queries, \"get_next_thought\" and \"is_finished\". The get_next_thought query returns the next thought from OpenAI's GPT-3.5-turbo model until it finds a newline or a specific stop word. The is_finished query determines if the reasoning has reached its stopping criteria by asking for \"yes\" or \"no\" and returning True/False accordingly.",
+        "type": "comment"
+    },
+    "46": {
+        "file_id": 3,
+        "content": "            len(TOKENS(yn)) < 20\n        '''\n    # TODO: programmatic constraints and evaluations\n    # TODO: explore metaprompting for rating criteria\n    async def evaluate_reasoning(self, reasoning):\n        thought_validations = [self.validate_thought(self.reasoning.fatal.prefix, self.reasoning.fatal.suffix, statement, reasoning, should_be=False) for statement in self.reasoning.fatal.items]\n        thought_validations += [self.validate_thought(self.reasoning.vital.prefix, self.reasoning.vital.suffix, statement, reasoning, should_be=True) for statement in self.reasoning.vital.items]\n        thought_validations = await asyncio.gather(*thought_validations)\n        thought_validations = [x[0] for x in thought_validations]\n        if not all(thought_validations):\n            return 0\n        evaluations = [self.grade(statement, reasoning) for statement in self.reasoning.graded.items]\n        evaluations = await asyncio.gather(*evaluations)\n        evaluations = [x[0] for x in evaluations]\n        return sum(evaluations)",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:349-365"
+    },
+    "47": {
+        "file_id": 3,
+        "content": "This code defines a function, `evaluate_reasoning`, which takes reasoning as input and validates thoughts based on specific criteria. It checks vital and fatal statements, gathers the results of validations and evaluations asynchronously, and returns the sum of evaluation results if all vital thought validations are true.",
+        "type": "comment"
+    },
+    "48": {
+        "file_id": 3,
+        "content": "    @lmql.query\n    async def validate_thought(self, prefix, suffix, statement, reasoning, should_be=True):\n        '''lmql\n        argmax\n            default = \"yes\" if should_be else \"no\"\n            \"( Answer yes/no. If not applicable, default to {default}. )\\n\"\n            \"{prefix}\"\n            \"{reasoning}\"\n            \"{suffix}\"\n            \"{statement}: [yn]\"\n            if yn.split()[-1] in [\"yes\", \"Yes\"]:\n                answer = True\n            else:\n                answer = False\n            return answer == should_be\n        from\n            \"openai/gpt-3.5-turbo\"\n        where\n            STOPS_AT(yn, \"yes\") and\n            STOPS_AT(yn, \"no\") and\n            STOPS_AT(yn, \"Yes\") and\n            STOPS_AT(yn, \"No\") and\n            len(TOKENS(yn)) < 10\n        '''\n    # TODO: replace ridiculous list of stops_at constraints if \"in\" constraints are supported for chat\n    @lmql.query\n    async def grade(self, statement, reasoning):\n        '''lmql\n        argmax\n            \"( rate each point from 1 - 9 where 5 is neutral. If N/A choose 5. )\\n\"",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:367-398"
+    },
+    "49": {
+        "file_id": 3,
+        "content": "This code defines two functions, `validate_thought` and `grade`, using the LMQL library. `validate_thought` takes inputs such as prefix, suffix, statement, reasoning, and should_be, and uses an AI model to determine if the user's answer is either \"yes\" or \"no\". `grade` takes a statement and reasoning and prompts the user to rate its relevance from 1 to 9. The code includes a TODO for future replacement of stop_at constraints with in constraints if supported by the chat function.",
+        "type": "comment"
+    },
+    "50": {
+        "file_id": 3,
+        "content": "            \"{self.reasoning.graded.prefix}\"\n            \"{reasoning}\"\n            \"{self.reasoning.graded.suffix}\"\n            \"{statement}: [rating]\"\n            if rating[-1] in [\"1\", \"2\", \"3\", \"4\", \"5\", \"6\", \"7\", \"8\", \"9\"]:\n                rating = int(rating[-1])\n                rating = rating - 5\n            else:\n                rating = 0 # no information if improperly answered\n            return rating\n        from \n            \"openai/gpt-3.5-turbo\"\n        where\n            STOPS_AT(rating, \"1\") and\n            STOPS_AT(rating, \"2\") and\n            STOPS_AT(rating, \"3\") and\n            STOPS_AT(rating, \"4\") and\n            STOPS_AT(rating, \"5\") and\n            STOPS_AT(rating, \"6\") and\n            STOPS_AT(rating, \"7\") and\n            STOPS_AT(rating, \"8\") and\n            STOPS_AT(rating, \"9\") and\n            len(TOKENS(rating)) < 10\n        '''",
+        "type": "code",
+        "location": "/tree_of_thoughts.py:399-423"
+    },
+    "51": {
+        "file_id": 3,
+        "content": "This code snippet seems to be rating a given statement based on its content. It retrieves the prefix and suffix from a reasoning object, formats a string with the statement and rating, adjusts the rating if it's within a specific range, and finally checks the rating for certain conditions before returning the rating or setting it to 0 if improperly answered.",
+        "type": "comment"
+    }
+}

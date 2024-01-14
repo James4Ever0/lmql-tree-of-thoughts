@@ -1,0 +1,10 @@
+{
+    "summary": "This code sets up a TreeOfThoughts instance to iterate through the word \"mayonnaise\" letter by letter, count occurrences of 'n', and store the result in answers for final printing.",
+    "details": [
+        {
+            "comment": "This code sets up a TreeOfThoughts instance to iterate through the word \"mayonnaise\" letter by letter, count occurrences of 'n', and store the result in answers for final printing.",
+            "location": "\"/media/root/Prima/works/lmql-tree-of-thoughts/docs/src/examples/mayonnaise.py\":0-33",
+            "content": "from tree_of_thoughts import TreeOfThoughts\ntree_config = {\n    \"initial\": {\n        \"prefix\": \"Iterate through the word '\",\n        \"suffix\": \"' letter by letter, and note the index of each letter.\",\n    },\n    \"reasoning\": {\n        \"graded\": {\n            \"items\": [\n                \"On a scale of 1-9 the instructions are being respected so far: \"\n            ],\n        },\n    },\n    \"answer\": {\n        \"callback_prompt\": {\n            \"suffix\": \"\\nThe total number of of 'n' occurences is: \",\n        },\n        \"callback_fn\": lambda x: x.replace(\".\", \"\").strip(),\n        \"validation\" : {\n            \"items\": [\n                  lambda s: s.isdigit()\n            ]\n        },\n    },\n}\nletter_n_counter = TreeOfThoughts(**tree_config, max_iterations=15)\nanswers = letter_n_counter.reason(\"mayonnaise\", n_active_leaves=1, n_branches=1, verbose=True)\nprint()\nprint(\"FINAL ANSWERS\")\nprint(answers)"
+        }
+    ]
+}
